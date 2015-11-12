@@ -1,13 +1,64 @@
 package me.lingmingren.netty.samples;
 
-public class TcpClientHandler {
+import io.netty.channel.ChannelHandlerContext;
+import io.netty.channel.SimpleChannelInboundHandler;
 
-	/**
-	 * @param args
-	 */
-	public static void main(String[] args) {
-		// TODO Auto-generated method stub
+public class TcpClientHandler extends SimpleChannelInboundHandler<String> {
+	String message;
+	ChannelStateHandler asynchCall;
+	boolean close = false;
 
+    public TcpClientHandler(String message, ChannelStateHandler asynchCall) {
+    	this.message = message;
+    	this.asynchCall = asynchCall;
+    }
+    
+    @Override
+    public void channelActive(ChannelHandlerContext ctx) throws Exception {
+    	ctx.writeAndFlush(this.message);
+    	System.out.println("channelActive "+ ctx.channel());
+    	asynchCall.actived(ctx.pipeline());
+    }
+    
+   
+   
+    @Override
+    public void channelRegistered(ChannelHandlerContext ctx) throws Exception {    
+    	System.out.println("channelRegistered "+ ctx.channel());
+    }
+    
+    @Override
+    public void channelUnregistered(ChannelHandlerContext ctx) throws Exception {    	
+    	System.out.println("channelUnregistered "+ ctx.channel());
+    }
+    
+    @Override
+    public void channelInactive(ChannelHandlerContext ctx) throws Exception {    	
+    	System.out.println("channelInactive "+ctx.channel());
+    }   
+
+    @Override
+    public void channelReadComplete(ChannelHandlerContext ctx) {
+    	 ctx.flush();
+         
+         //close the connection after flushing data to client
+    	 if(close){
+    		 ctx.close();	 
+    	 }  
+    	 
+    	 System.out.println("channelReadComplete " + ctx.channel());
+    }
+
+    @Override
+    public void exceptionCaught(ChannelHandlerContext ctx, Throwable cause) {
+        // Close the connection when an exception is raised.
+        cause.printStackTrace();
+        ctx.close();
+    }
+
+	@Override
+	protected void messageReceived(ChannelHandlerContext ctx, String arg1)
+			throws Exception {
+		System.out.println("messageReceived " + ctx.channel());
 	}
-
 }

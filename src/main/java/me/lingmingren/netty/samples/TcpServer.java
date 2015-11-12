@@ -1,12 +1,19 @@
 package me.lingmingren.netty.samples;
 
 import io.netty.bootstrap.ServerBootstrap;
+import io.netty.channel.Channel;
+import io.netty.channel.ChannelFuture;
+import io.netty.channel.ChannelHandlerContext;
+import io.netty.channel.ChannelInboundHandlerAdapter;
 import io.netty.channel.ChannelInitializer;
 import io.netty.channel.ChannelPipeline;
 import io.netty.channel.EventLoopGroup;
 import io.netty.channel.nio.NioEventLoopGroup;
 import io.netty.channel.socket.SocketChannel;
 import io.netty.channel.socket.nio.NioServerSocketChannel;
+import io.netty.handler.codec.string.StringDecoder;
+import io.netty.handler.codec.string.StringEncoder;
+import io.netty.util.CharsetUtil;
 
 public class TcpServer {
 
@@ -25,14 +32,7 @@ public class TcpServer {
                      ChannelPipeline p = ch.pipeline();
                      p.addLast(new StringDecoder(CharsetUtil.UTF_8));
                      p.addLast(new StringEncoder(CharsetUtil.UTF_8)); 
-                     p.addLast(new ChannelInboundHandlerAdapter(){
-                    	 @Override
-                    	public void channelRead(ChannelHandlerContext ctx,
-                    			Object msg) throws Exception {
-                    		 String s = String.format("Response the message %s from server", msg);
-                    		 ctx.writeAndFlush(s);
-                    	}
-                     });
+                     p.addLast(new TcpServerHandler());
                  }
              });
             ChannelFuture f = b.bind(PORT).sync();
