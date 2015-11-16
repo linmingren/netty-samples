@@ -6,6 +6,8 @@ import java.util.TimerTask;
 
 import io.netty.channel.ChannelHandlerAdapter;
 import io.netty.channel.ChannelHandlerContext;
+import io.netty.util.concurrent.Future;
+import io.netty.util.concurrent.GenericFutureListener;
 
 
 
@@ -13,8 +15,23 @@ public class TcpServerHandler extends ChannelHandlerAdapter {
 
 	boolean isCatchedException = false;
 
+	@Override
+	public void flush(ChannelHandlerContext ctx) throws Exception {	
+		super.flush(ctx);	
+		/*ctx.close().addListener(new GenericFutureListener<Future<? super Void>>() {
+
+			public void operationComplete(Future<? super Void> future)
+					throws Exception {
+				// TODO Auto-generated method stub
+				System.out.println("close connection: "+future.isSuccess());
+			}
+			
+		});*/
+	}
+	
     @Override
     public void channelRead(ChannelHandlerContext ctx, Object msg) {
+    	System.out.println("channelRead");
     	System.out.println(msg);
     	
     	if(msg.equals("")){
@@ -37,7 +54,8 @@ public class TcpServerHandler extends ChannelHandlerAdapter {
     }
     
     @Override
-    public void channelUnregistered(ChannelHandlerContext ctx) throws Exception {    	
+    public void channelUnregistered(ChannelHandlerContext ctx) throws Exception {  
+    	Thread.sleep(70000);
     	super.channelUnregistered(ctx);
     	InetSocketAddress address = (InetSocketAddress) ctx.channel().remoteAddress();
     	System.out.println("channelUnregistered "+ address.getAddress());
@@ -57,7 +75,8 @@ public class TcpServerHandler extends ChannelHandlerAdapter {
     }
 
     @Override
-    public void channelReadComplete(final ChannelHandlerContext ctx) {    	
+    public void channelReadComplete(final ChannelHandlerContext ctx) {    
+    	System.out.println("channelReadComplete");
         ctx.flush();
         
         if( ! isCatchedException ){

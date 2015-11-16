@@ -1,6 +1,8 @@
 package me.lingmingren.netty.samples;
 
+import io.netty.channel.ChannelHandler.Skip;
 import io.netty.channel.ChannelHandlerContext;
+import io.netty.channel.ChannelPromise;
 import io.netty.channel.SimpleChannelInboundHandler;
 
 public class TcpClientHandler extends SimpleChannelInboundHandler<String> {
@@ -21,8 +23,25 @@ public class TcpClientHandler extends SimpleChannelInboundHandler<String> {
     }
     
    
-   
+    
+    
     @Override
+	@Skip
+	public void write(ChannelHandlerContext ctx, Object msg,
+			ChannelPromise promise) throws Exception {
+		// TODO Auto-generated method stub
+    	System.out.println("write "+ ctx.channel());
+		super.write(ctx, msg, promise);
+	}
+
+	@Override
+	public void channelRead(ChannelHandlerContext ctx, Object msg)
+			throws Exception {
+    	System.out.println("channelRead "+ ctx.channel());
+		super.channelRead(ctx, msg);
+	}
+
+	@Override
     public void channelRegistered(ChannelHandlerContext ctx) throws Exception {    
     	System.out.println("channelRegistered "+ ctx.channel());
     }

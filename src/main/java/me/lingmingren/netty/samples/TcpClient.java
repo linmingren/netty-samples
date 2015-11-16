@@ -17,7 +17,13 @@ import io.netty.channel.socket.SocketChannel;
 import io.netty.channel.socket.nio.NioSocketChannel;
 import io.netty.handler.codec.string.StringDecoder;
 import io.netty.handler.codec.string.StringEncoder;
+import io.netty.handler.logging.LogLevel;
+import io.netty.handler.logging.LoggingHandler;
+import io.netty.handler.timeout.ReadTimeoutHandler;
+import io.netty.handler.timeout.WriteTimeoutHandler;
 import io.netty.util.CharsetUtil;
+import io.netty.util.concurrent.Future;
+import io.netty.util.concurrent.GenericFutureListener;
 
 public class TcpClient {
 	String host;
@@ -46,7 +52,10 @@ public class TcpClient {
              .channel(NioSocketChannel.class)
              .option(ChannelOption.TCP_NODELAY, true)
              // Configure the connect timeout option.
-             .option(ChannelOption.CONNECT_TIMEOUT_MILLIS, 10000)
+             .option(ChannelOption.SO_TIMEOUT, 30000)
+             .option(ChannelOption.CONNECT_TIMEOUT_MILLIS, 60000)
+            // .childOption(ChannelOption.CONNECT_TIMEOUT_MILLIS, 10000)
+             .handler(new LoggingHandler(LogLevel.DEBUG))
              .handler(new ChannelInitializer<SocketChannel>() {
                  @Override
                  public void initChannel(SocketChannel ch) throws Exception {
@@ -56,7 +65,8 @@ public class TcpClient {
 
                      // Encoder
                      p.addLast("stringEncoder", new StringEncoder(CharsetUtil.UTF_8));  
-                     
+                  //   p.addLast("readTimeoutHandler", new ReadTimeoutHandler(30));
+                 //    p.addLast("writeTimeoutHandler", new WriteTimeoutHandler(30));
                      // the handler for client
                      p.addLast(clientHandler);
                  }
@@ -100,7 +110,27 @@ public class TcpClient {
 		    	while (true) {
 		    		message = scanner.next();
 		    		
-		    		pipeline.writeAndFlush(message);
+		    		StringBuffer sb = new StringBuffer();
+		    		int count = 0;
+		    		while ( ++count < 10000) {
+		    			sb.append(message);
+		    		}
+		    		
+		    		count = 0;
+		    	//	pipeline.addl
+		    		pipeline.channel().isWritable();
+		    		
+		    		ChannelFuture f = pipeline.writeAndFlush(sb.toString());
+		    		f.addListeners(new GenericFutureListener<Future<? super Void>>() {
+
+		    			public void operationComplete(Future<? super Void> future)
+		    					throws Exception {
+		    				// TODO Auto-generated method stub
+		    				System.out.println("operation complete: "+future.get());
+		    			}
+		    			
+		    		});
+		    		
 		    		if (message.equals("bye")) {
 		    			pipeline.close();
 		    			scanner.close();
