@@ -32,6 +32,7 @@ import io.netty.handler.codec.http.HttpHeaders;
 import io.netty.handler.codec.http.HttpMethod;
 import io.netty.handler.codec.http.HttpObject;
 import io.netty.handler.codec.http.HttpRequest;
+import io.netty.handler.codec.http.HttpResponse;
 import io.netty.handler.codec.http.HttpVersion;
 import io.netty.handler.codec.http.LastHttpContent;
 
@@ -72,7 +73,8 @@ public class HttpDownloader {
 		protected void messageReceived(ChannelHandlerContext ctx, HttpObject msg) {
 			
 			try {
-				if (msg instanceof HttpRequest) {
+				if (msg instanceof HttpResponse) {
+					System.out.println("received HttpResponse:");
 					initFileChannel();
 				} else if (msg instanceof HttpContent) {
 					System.out.println("received HttpContent:");
