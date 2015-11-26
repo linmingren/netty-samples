@@ -1,4 +1,4 @@
-package me.lingmingren.netty.samples.httprouter;
+package me.lingmingren.netty.samples.httpfileserver;
 
 import io.netty.bootstrap.ServerBootstrap;
 import io.netty.channel.Channel;
@@ -9,22 +9,28 @@ import io.netty.channel.EventLoopGroup;
 import io.netty.channel.nio.NioEventLoopGroup;
 import io.netty.channel.socket.SocketChannel;
 import io.netty.channel.socket.nio.NioServerSocketChannel;
+import io.netty.handler.codec.http.HttpObjectAggregator;
 import io.netty.handler.codec.http.HttpRequestDecoder;
 import io.netty.handler.codec.http.HttpResponseEncoder;
+import io.netty.handler.codec.http.HttpServerCodec;
+import io.netty.handler.stream.ChunkedWriteHandler;
 
-public class HttpServerWithRouter {
+public class HttpFileServer {
 
 	public static void main(String[] args) throws Exception {
-		String ip = "0.0.0.0";
+		String ip = "127.0.0.1";
 		int port = 8080;
 
-		final HttpEventRoutingHandler routerHandler = new HttpEventRoutingHandler();
+		final HttpStaticFileServerHandler routerHandler = new HttpStaticFileServerHandler();
 		ChannelInitializer<SocketChannel> channelInitializer = new ChannelInitializer<SocketChannel>() {
 			@Override
 			protected void initChannel(SocketChannel ch) throws Exception {
 				ChannelPipeline p = ch.pipeline();
-				p.addLast("decoder", new HttpRequestDecoder());
-				p.addLast("encoder", new HttpResponseEncoder());
+				//p.addLast("decoder", new HttpRequestDecoder());
+				//p.addLast("encoder", new HttpResponseEncoder());
+				p.addLast("HttpServerCodec", new HttpServerCodec());
+				p.addLast("Aggregator",new HttpObjectAggregator(65536));
+				p.addLast("Chunked",new ChunkedWriteHandler());  
 				p.addLast(routerHandler);
 			}
 		};
@@ -41,7 +47,7 @@ public class HttpServerWithRouter {
 					.childHandler(channelInitializer);
 
 			// bind to public access host info
-			Channel ch1 = publicServerBootstrap.bind(ip,port).sync().channel();
+			Channel ch1 = publicServerBootstrap.bind(port).sync().channel();
 
 			System.out.println(String.format("Started OK HttpServer at %s:%d",
 					ip, port));

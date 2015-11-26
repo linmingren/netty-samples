@@ -12,6 +12,7 @@ import io.netty.bootstrap.Bootstrap;
 import io.netty.buffer.ByteBuf;
 import io.netty.channel.Channel;
 import io.netty.channel.ChannelHandler;
+import io.netty.channel.ChannelHandler.Skip;
 import io.netty.channel.ChannelHandlerContext;
 import io.netty.channel.ChannelInitializer;
 import io.netty.channel.ChannelPipeline;
@@ -69,6 +70,7 @@ public class HttpDownloader {
 			}
 		}
 
+		//16K for a message, for a 17K message, channelRead invoked twice
 		@Override
 		protected void messageReceived(ChannelHandlerContext ctx, HttpObject msg) {
 			
@@ -97,11 +99,30 @@ public class HttpDownloader {
 				e.printStackTrace();
 			}
 		}
+
+		@Override
+		public void channelRead(ChannelHandlerContext ctx, Object msg)
+				throws Exception {
+			System.out.println("channelRead");
+			super.channelRead(ctx, msg);
+		}
+
+		@Override
+		@Skip
+		public void channelReadComplete(ChannelHandlerContext ctx)
+				throws Exception {
+			// TODO Auto-generated method stub
+			System.out.println("channelReadComplete");
+			super.channelReadComplete(ctx);
+		}
+		
+		
 	}
 
 	public static void main(String[] args) throws Exception {
 		//https://codeload.github.com/trieu/netty-cookbook/zip/master
-		String url = "http://www.baidu.com";
+		//http://mirrors.yun-idc.com/centos/7/isos/x86_64/CentOS-7-x86_64-Minimal-1503-01.iso
+		String url = "http://mirrors.yun-idc.com/centos/7/isos/x86_64/CentOS-7-x86_64-Minimal-1503-01.iso";
 		File file = new File("./test.html");
 		final ChannelHandler handler = new HttpDownloadHandler(file);
 		
@@ -130,6 +151,7 @@ public class HttpDownloader {
 					});
 			// Make the connection attempt.
 			Channel ch = b.connect(host, port).sync().channel();
+			//ch.config().setAllocator(allocator);
 			// Prepare the HTTP request.
 			HttpRequest request = new DefaultFullHttpRequest(HttpVersion.HTTP_1_1, HttpMethod.GET, uri.getRawPath());
 			HttpHeaders headers = request.headers();
@@ -141,7 +163,7 @@ public class HttpDownloader {
 			ch.writeAndFlush(request);
 			// Wait for the server to close the connection.
 			ch.closeFuture().sync();
-			Thread.sleep(1000);
+			Thread.sleep(100000);
 		} finally {
 			// Shut down executor threads to exit.
 			group.shutdownGracefully();
